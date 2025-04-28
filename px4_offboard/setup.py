@@ -33,7 +33,8 @@ setup(
                 'processes = px4_offboard.processes:main',
                 'swarm_processes = px4_offboard.swarm_processes:main',
                 'teleop_swarm = px4_offboard.teleop_swarm:main',
-                'swarm_auto = px4_offboard.swarm_auto:main'
+                'swarm_auto = px4_offboard.swarm_auto:main',
+                "odom_to_tf = px4_offboard.odom_to_tf:main"
         ],
     },
 )

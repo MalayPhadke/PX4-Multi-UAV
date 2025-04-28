@@ -105,7 +105,6 @@ def generate_launch_description():
             output='screen',
         ))
 
-    # Static transforms for each camera frame to map (for RViz tf)
     static_tf_nodes = []
     for model in model_names:
         # IMX214 sensor frame (match header.frame_id from Gazebo)
@@ -113,9 +112,10 @@ def generate_launch_description():
             package='tf2_ros', executable='static_transform_publisher',
             name=f"static_tf_{model}_imx214",
             arguments=[
-                '0','0','0','0','0','0',
-                'map',
-                f"{model}/OakDLite/base_link/IMX214"
+                # '0','0','0','0','0','0',
+                '.12','0.03','0.242','0','0','0',
+                f"{model}/OakDLite/base_link",
+                f"{model}/OakDLite/base_link/IMX214",
             ], output='screen'
         ))
         # StereoOV7251 sensor frame
@@ -123,20 +123,27 @@ def generate_launch_description():
             package='tf2_ros', executable='static_transform_publisher',
             name=f"static_tf_{model}_stereoov7251",
             arguments=[
-                '0','0','0','0','0','0',
-                'map',
-                f"{model}/OakDLite/base_link/StereoOV7251"
+                # '0','0','0','0','0','0',
+                '.12','0.03','0.242','0','0','0',
+                f"{model}/OakDLite/base_link",
+                f"{model}/OakDLite/base_link/StereoOV7251",
             ], output='screen'
         ))
 
     return LaunchDescription([
+        Node(
+            package='ros_gz_bridge', executable='parameter_bridge', name='bridge_clock',
+            arguments=['/world/simple_tunnel_03/clock@rosgraph_msgs/msg/Clock@gz.msgs.Clock'],
+            remappings=[('/world/simple_tunnel_03/clock', '/clock')],
+            output='screen'
+        ),
         # ExecuteProcess(cmd=['bash', bash_script_path], output='screen'),
         Node(
             package='px4_offboard',
             namespace='px4_offboard',
             executable='visualizer',
             name='visualizer',
-            parameters=[{'drone_namespaces': 'px4_1,px4_2'}],
+            parameters=[{'drone_namespaces': 'px4_1,px4_2'}, {'use_sim_time': True}],
         ),
         Node(
             package='px4_offboard',
@@ -162,20 +169,28 @@ def generate_launch_description():
             parameters=[{'drone_name': 'x500_depth_2', 'vehicle_namespace': 'px4_2'}],
         ),
         # Teleoperation node for swarm control
-        # Node(
-        #     package='px4_offboard',
-        #     executable='teleop_swarm',
-        #     name='teleop_swarm',
-        #     prefix='gnome-terminal --',
-        # ),
-        # All static transforms
-        *static_tf_nodes,
+        Node(
+            package='px4_offboard',
+            executable='teleop_swarm',
+            name='teleop_swarm',
+            prefix='gnome-terminal --',
+        ),
+        Node(
+            package='px4_offboard',
+            executable='odom_to_tf',
+            name='odom_to_tf',
+            output='screen',
+            parameters=[{'use_sim_time': True}],
+        ),
+        # All static transforms for sensor frames
+        # *static_tf_nodes,
         Node(
             package='rviz2',
             namespace='',
             executable='rviz2',
             name='rviz2',
-            arguments=['-d', [os.path.join(package_dir, 'visualize.rviz')]]
+            parameters=[{'use_sim_time': True}],
+            arguments=['-d', os.path.join(package_dir, 'visualize.rviz')]
         ),
         TimerAction(
             period=5.0,
