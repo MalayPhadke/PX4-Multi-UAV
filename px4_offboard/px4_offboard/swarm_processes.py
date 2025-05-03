@@ -14,7 +14,7 @@ commands = [
     "MicroXRCEAgent udp4 -p 8888",
     
     # Start Gazebo with the maze world first
-    f"cd ~/PX4-Autopilot && gz sim -r {os.environ['HOME']}/PX4-Autopilot/Tools/simulation/gz/worlds/tunnel.sdf",
+    f"cd ~/PX4-Autopilot && gz sim -r {os.environ['HOME']}/PX4-Autopilot/Tools/simulation/gz/worlds/maze.sdf",
     
     # Wait for Gazebo to fully start before launching PX4
     "sleep 5",

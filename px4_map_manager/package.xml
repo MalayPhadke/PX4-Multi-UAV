@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>px4_map_manager</name>
+  <version>0.0.0</version>
+  <description>Dynamic occupancy voxel map generator for multi-UAV PX4</description>
+  <maintainer email="malayp003@gmail.com">Malay Phadke</maintainer>
+  <license>BSD-3-Clause</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>rclcpp</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>ros_gz_bridge</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>message_filters</build_depend>
+  <build_depend>cv_bridge</build_depend>
+  <build_depend>pcl_conversions</build_depend>
+  <build_depend>rosidl_default_generators</build_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>message_filters</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>pcl_conversions</exec_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

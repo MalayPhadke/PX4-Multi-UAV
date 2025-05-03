@@ -5,6 +5,7 @@ from rclpy.qos import QoSProfile, QoSReliabilityPolicy
 from geometry_msgs.msg import PoseStamped, TransformStamped
 import tf2_ros
 import tf_transformations
+import math
 
 class OdomToTf(Node):
     def __init__(self):
@@ -34,15 +35,12 @@ class OdomToTf(Node):
                 lambda msg, ns=ns: self.pose_cb(ns, msg),
                 qos)
 
-        # sensor static offsets and quaternion (base_link -> camera_link)
-        self.sensor_offset = (.12, 0.03, 0.242)
-        self.sensor_quat = tf_transformations.quaternion_from_euler(0.0, 0.0, 0.0)
         self.sensor_suffixes = ['IMX214', 'StereoOV7251']
 
         # timer to broadcast base_link transforms at 30 Hz
         self.create_timer(1/30, self.broadcast_base_transforms)
         # timer to broadcast sensor transforms at 1.25 Hz
-        self.create_timer(1/1.25, self.broadcast_sensor_transforms)
+        # self.create_timer(1/1.25, self.broadcast_sensor_transforms)
 
     def pose_cb(self, ns, msg: PoseStamped):
         """Store the latest pose for namespace ns."""
@@ -53,39 +51,33 @@ class OdomToTf(Node):
             msg = self.latest_pose.get(ns)
             if msg is None:
                 continue
+            # Log quaternion orientation for debugging
+            self.get_logger().info(f"Quaternion for {ns}: w={msg.pose.orientation.w}, " +
+                                f"x={msg.pose.orientation.x}, y={msg.pose.orientation.y}, " +
+                                f"z={msg.pose.orientation.z}")
             t = TransformStamped()
             t.header.stamp = msg.header.stamp
             t.header.frame_id = ns
             t.child_frame_id = child
-            t.transform.translation.x = msg.pose.position.x
-            t.transform.translation.y = msg.pose.position.y
-            t.transform.translation.z = msg.pose.position.z
-            t.transform.rotation.x = msg.pose.orientation.x
-            t.transform.rotation.y = msg.pose.orientation.y
-            t.transform.rotation.z = msg.pose.orientation.z
-            t.transform.rotation.w = msg.pose.orientation.w
+            pos = msg.pose.position
+            att = msg.pose.orientation
+
+            # Convert orientation (quaternion): NED->ENU
+            # convert geometry_msgs [x,y,z,w] to tf format [x,y,z,w]
+            ned_tf = [att.x, att.y, att.z, att.w]
+            # static NED->ENU rotation: roll=π, pitch=0, yaw=π/2
+            q_rot = tf_transformations.quaternion_from_euler(math.pi, 0.0, math.pi/2)
+            enu_tf = tf_transformations.quaternion_multiply(q_rot, ned_tf)
+
+            t.transform.translation.x = pos.y  # NED y -> ENU x
+            t.transform.translation.y = pos.x  # NED x -> ENU y
+            t.transform.translation.z = -pos.z # NED z -> ENU z
+            # assign rotated quaternion [x,y,z,w]
+            t.transform.rotation.x = enu_tf[0]
+            t.transform.rotation.y = enu_tf[1]
+            t.transform.rotation.z = enu_tf[2]
+            t.transform.rotation.w = enu_tf[3]
             self.tf_broadcaster.sendTransform(t)
-
-    def broadcast_sensor_transforms(self):
-        now = self.get_clock().now().to_msg()
-        for ns, child in self.drones.items():
-            msg = self.latest_pose.get(ns)
-            if msg is None:
-                continue
-            for suffix in self.sensor_suffixes:
-                sensor_t = TransformStamped()
-                sensor_t.header.stamp = now
-                sensor_t.header.frame_id = child
-                sensor_t.child_frame_id = f"{child}/{suffix}"
-                sensor_t.transform.translation.x = self.sensor_offset[0]
-                sensor_t.transform.translation.y = self.sensor_offset[1]
-                sensor_t.transform.translation.z = self.sensor_offset[2]
-                sensor_t.transform.rotation.x = self.sensor_quat[0]
-                sensor_t.transform.rotation.y = self.sensor_quat[1]
-                sensor_t.transform.rotation.z = self.sensor_quat[2]
-                sensor_t.transform.rotation.w = self.sensor_quat[3]
-                self.tf_broadcaster.sendTransform(sensor_t)
-
 
 def main(args=None):
     rclpy.init(args=args)

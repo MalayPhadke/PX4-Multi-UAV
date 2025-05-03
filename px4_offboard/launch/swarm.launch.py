@@ -59,7 +59,7 @@ def generate_launch_description():
     # Bridge nodes for camera-related topics
     model_names = ["x500_depth_1", "x500_depth_2"]  # Add more drones if needed
  
-    world_name = 'simple_tunnel_03'
+    world_name = 'maze'
     camera_bridge_nodes = []
     for model in model_names:
         # IMX214 topics
@@ -111,30 +111,28 @@ def generate_launch_description():
         static_tf_nodes.append(Node(
             package='tf2_ros', executable='static_transform_publisher',
             name=f"static_tf_{model}_imx214",
-            arguments=[
-                # '0','0','0','0','0','0',
-                '.12','0.03','0.242','0','0','0',
-                f"{model}/OakDLite/base_link",
-                f"{model}/OakDLite/base_link/IMX214",
-            ], output='screen'
+            arguments=['--frame-id', f"{model}/OakDLite/base_link",
+              '--child-frame-id', f"{model}/OakDLite/base_link/IMX214",
+              '--x', '0.12', '--y', '0.03', '--z', '0.242',
+              '--roll', '0', '--pitch', '0', '--yaw', '0'],
+            output='screen'
         ))
         # StereoOV7251 sensor frame
         static_tf_nodes.append(Node(
             package='tf2_ros', executable='static_transform_publisher',
             name=f"static_tf_{model}_stereoov7251",
-            arguments=[
-                # '0','0','0','0','0','0',
-                '.12','0.03','0.242','0','0','0',
-                f"{model}/OakDLite/base_link",
-                f"{model}/OakDLite/base_link/StereoOV7251",
-            ], output='screen'
+            arguments=['--frame-id', f"{model}/OakDLite/base_link",
+              '--child-frame-id', f"{model}/OakDLite/base_link/StereoOV7251",
+              '--x', '0.12', '--y', '0.03', '--z', '0.242',
+              '--roll', '0', '--pitch', '0', '--yaw', '0'],
+            output='screen'
         ))
 
     return LaunchDescription([
         Node(
             package='ros_gz_bridge', executable='parameter_bridge', name='bridge_clock',
-            arguments=['/world/simple_tunnel_03/clock@rosgraph_msgs/msg/Clock@gz.msgs.Clock'],
-            remappings=[('/world/simple_tunnel_03/clock', '/clock')],
+            arguments=[f"/world/{world_name}/clock@rosgraph_msgs/msg/Clock@gz.msgs.Clock"],
+            remappings=[(f'/world/{world_name}/clock', '/clock')],
             output='screen'
         ),
         # ExecuteProcess(cmd=['bash', bash_script_path], output='screen'),
@@ -183,7 +181,7 @@ def generate_launch_description():
             parameters=[{'use_sim_time': True}],
         ),
         # All static transforms for sensor frames
-        # *static_tf_nodes,
+        *static_tf_nodes,
         Node(
             package='rviz2',
             namespace='',
