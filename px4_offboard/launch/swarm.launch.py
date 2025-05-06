@@ -173,23 +173,23 @@ def generate_launch_description():
             name='teleop_swarm',
             prefix='gnome-terminal --',
         ),
-        Node(
-            package='px4_offboard',
-            executable='odom_to_tf',
-            name='odom_to_tf',
-            output='screen',
-            parameters=[{'use_sim_time': True}],
-        ),
+        # Node(
+        #     package='px4_offboard',
+        #     executable='odom_to_tf',
+        #     name='odom_to_tf',
+        #     output='screen',
+        #     parameters=[{'use_sim_time': True}],
+        # ),
         # All static transforms for sensor frames
         *static_tf_nodes,
-        Node(
-            package='rviz2',
-            namespace='',
-            executable='rviz2',
-            name='rviz2',
-            parameters=[{'use_sim_time': True}],
-            arguments=['-d', os.path.join(package_dir, 'visualize.rviz')]
-        ),
+        # Node(
+        #     package='rviz2',
+        #     namespace='',
+        #     executable='rviz2',
+        #     name='rviz2',
+        #     parameters=[{'use_sim_time': True}],
+        #     arguments=['-d', os.path.join(package_dir, 'visualize.rviz')]
+        # ),
         TimerAction(
             period=5.0,
             actions=camera_bridge_nodes

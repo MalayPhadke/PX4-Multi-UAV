@@ -204,7 +204,7 @@ class OffboardControl(Node):
 
     #receives and sets vehicle status values 
     def vehicle_status_callback(self, msg):
-        self.get_logger().info(f"Vehicle Status: {msg.pre_flight_checks_pass}, Arming State: {msg.arming_state}")
+        # self.get_logger().info(f"Vehicle Status: {msg.pre_flight_checks_pass}, Arming State: {msg.arming_state}")
         if (msg.nav_state != self.nav_state):
             self.get_logger().info(f"NAV_STATUS: {msg.nav_state}")
         
